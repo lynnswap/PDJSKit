@@ -1,6 +1,29 @@
 import Testing
 @testable import PDJSKit
 
-@Test func example() async throws {
-    // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+@Test("extractFunctionNames") func extractFunctionNames() {
+    let source = "test(), aaa(),\nfoo()"
+    let result = source.extractFunctionNames()
+    #expect(result == Set(["test", "aaa", "foo"]))
+}
+
+@Test("evaluateScheduledFunctions") func evaluateScheduledFunctionsTest() {
+    let scheduleSource = """
+    test(), aaa(),
+    foo()
+
+    """
+    let testScript = """
+    function test(){
+        console.log('aaa');
+    }
+    function foo(){
+        console.log('aaa');
+    }
+    """
+    let names = evaluateScheduledFunctions(
+        userScript: testScript,
+        scheduleDefinition: scheduleSource
+    )
+    #expect(names == ["test", "foo"])
 }
