@@ -59,3 +59,33 @@ public func evaluateScheduledFunctions(
     let candidates = scheduleDefinition.extractFunctionNames()
     return context.filterAvailableFunctions(from: candidates)
 }
+
+/// ユーザースクリプト内で定義されたグローバル関数名を抽出する。
+///
+/// - Parameters:
+///   - userScript: JavaScript 関数を含むスクリプト文字列
+///   - context: 評価に利用する `JSContext`
+/// - Returns: `window` に追加された関数の一覧（定義順）
+public func listDefinedFunctions(
+    userScript: String,
+    in context: JSContext = JSContext()
+) -> [String] {
+
+    context.evaluateScript("var window = this;")
+    let baseline = context.evaluateScript("Object.getOwnPropertyNames(window)")?.toArray() as? [String] ?? []
+    context.evaluateScript(userScript)
+
+    let baselineJSON = String(data: try! JSONEncoder().encode(baseline), encoding: .utf8)!
+    let js = """
+    (function(before){
+        var lookup = Object.create(null);
+        before.forEach(function(key){ lookup[key] = true; });
+        return Object.getOwnPropertyNames(window).filter(function(key){
+            if (lookup[key]) { return false; }
+            return typeof window[key] === 'function';
+        });
+    })(\(baselineJSON));
+    """
+
+    return context.evaluateScript(js)?.toArray() as? [String] ?? []
+}

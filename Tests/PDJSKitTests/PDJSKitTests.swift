@@ -27,3 +27,19 @@ import Testing
     )
     #expect(names == ["test", "foo"])
 }
+
+@Test("listDefinedFunctions") func listDefinedFunctionsTest() {
+    let testScript = """
+    function alpha() {
+        return 1;
+    }
+    function beta() {
+        return 2;
+    }
+    const gamma = function() {
+        return 3;
+    };
+    """
+    let names = listDefinedFunctions(userScript: testScript)
+    #expect(names == ["alpha", "beta"])
+}
